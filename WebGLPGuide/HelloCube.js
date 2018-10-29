@@ -59,7 +59,7 @@ function main() {
     // gl.clear(gl.DEPTH_BUFFER_BIT);
     
     document.onkeydown = function(ev) {
-        keydown(ev, gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix);
+        keydown(ev);
     }
 
     let render = function() {
@@ -81,10 +81,12 @@ function main() {
 }
 
 let g_near = 1.0, g_far = 100.0;
-let g_eyeX = 0.0, g_eyeY= 0.0, g_eyeZ = 5.0;
+let g_eyeX = 0.0, g_eyeY= 0.0, g_eyeZ = 10.0;
 
 let g_mx = 0.0, g_my = 0.0, g_mz = 0.0;
-function keydown(ev, gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix) {
+
+let g_rotation = 0;
+function keydown(ev) {
     switch (ev.keyCode) {
         case 39: g_near += 1; break;  //按下右方向键
         case 37: g_near -= 1; break;  //按下左方向键
@@ -108,47 +110,67 @@ function keydown(ev, gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mv
 }
 
 function draw(gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix) {
-
     // console.log(' --- projMatrix : ', projMatrix);
 
     // viewMatrix.setLookAt(g_eyeX, g_eyeY, g_eyeZ, 0, 0, 0, 0, 1, 0);
     // viewMatrix.setOrtho(-1.0, 1.0, -1.0, 1.0, g_near, g_far);
-    modelMatrix.setTranslate(g_mx, g_my, g_mz);
+    g_rotation += 2;
+    modelMatrix.setTranslate(g_mx, g_my, g_mz).rotate(g_rotation, 1, 1, 0);
     viewMatrix.setLookAt(g_eyeX, g_eyeY, g_eyeZ, 0, 0, -1, 0, 1, 0);
     projMatrix.setPerspective(30, canvas.width/canvas.height, g_near, g_far);
 
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
 
     gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
-    gl.drawArrays(gl.TRIANGLES, 0, n/2);
+    // gl.drawArrays(gl.TRIANGLES, 0, 3);
     // gl.polygonOffset(1.0, 1.0);
-    gl.drawArrays(gl.TRIANGLES, n/2, n/2);
+    // gl.drawArrays(gl.TRIANGLES, n/2, n/2);
+
+    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
 }
 
 function initVertexBuffers (gl) {
-    var vertices = new Float32Array([
+    // Create a cube
+    //    v6----- v5
+    //   /|      /|
+    //  v1------v0|
+    //  | |     | |
+    //  | |v7---|-|v4
+    //  |/      |/
+    //  v2------v3
+    var verticesColors = new Float32Array([
         // Vertex coordinates and color
-        0.0,  2.8,  -2.0,  0.4,  1.0,  0.4, // The green triangle
-        -2.8, -2.8,  -2.0,  0.4,  1.0,  0.4,
-        2.8, -2.8,  -2.0,  0.4,  1.0,  0.4, 
- 
-        0.0,  3.0,  -2.0,  1.0,  1.0,  0.4, // The yellow triagle
-        -3.0, -3.0,  -2.0,  1.0,  1.0,  0.4,
-        3.0, -3.0,  -2.0,  1.0,  1.0,  0.4,  
+        1.0,  1.0,  1.0,     1.0,  1.0,  1.0,  // v0 White
+        -1.0,  1.0,  1.0,     1.0,  0.0,  1.0,  // v1 Magenta
+        -1.0, -1.0,  1.0,     1.0,  0.0,  0.0,  // v2 Red
+        1.0, -1.0,  1.0,     1.0,  1.0,  0.0,  // v3 Yellow
+        1.0, -1.0, -1.0,     0.0,  1.0,  0.0,  // v4 Green
+        1.0,  1.0, -1.0,     0.0,  1.0,  1.0,  // v5 Cyan
+        -1.0,  1.0, -1.0,     0.0,  0.0,  1.0,  // v6 Blue
+        -1.0, -1.0, -1.0,     0.0,  0.0,  0.0   // v7 Black
     ]);
 
-    let n = 6;
+    // Indices of the vertices
+    var indices = new Uint8Array([
+        0, 1, 2,   0, 2, 3,    // front
+        0, 3, 4,   0, 4, 5,    // right
+        0, 5, 6,   0, 6, 1,    // up
+        1, 6, 7,   1, 7, 2,    // left
+        7, 4, 3,   7, 3, 2,    // down
+        4, 7, 6,   4, 6, 5     // back
+    ]);
 
     let vertexBuffer = gl.createBuffer();
-    if (!vertexBuffer) {
+    let indexBuffer = gl.createBuffer();
+    if (!vertexBuffer || !indexBuffer) {
         console.log('Failed to create the buffer object');
         return -1;
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, verticesColors, gl.STATIC_DRAW);
 
-    let FSize = vertices.BYTES_PER_ELEMENT;
+    let FSize = verticesColors.BYTES_PER_ELEMENT;
     
     let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
     let a_Color = gl.getAttribLocation(gl.program, 'a_Color');
@@ -159,6 +181,10 @@ function initVertexBuffers (gl) {
     gl.enableVertexAttribArray(a_Color);
 
     // gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    return n;
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+    return indices.length;
 }
 
