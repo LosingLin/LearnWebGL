@@ -105,7 +105,7 @@ function main() {
     let normalMatrix = new Matrix4();
 
     viewMatrix.setLookAt(20.0, 10.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-    projMatrix.setPerspective(50.0, canvas.width/canvas.height, 1.0, 100.0);
+    projMatrix.setPerspective(50.0, canvas.width/canvas.height, 1.0, 1000.0);
 
     // gl.clear(gl.COLOR_BUFFER_BIT);
     // gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -170,7 +170,7 @@ function keydown(ev) {
 
 function draw(gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix, u_NormalMatrix, normalMatrix, u_ModelMatrix) {
 
-    console.log('------    g_arm1Angle :', g_arm1Angle);
+    // console.log('------    g_arm1Angle :', g_arm1Angle);
     
     // base
     let baseHeight = 2.0;
@@ -184,7 +184,7 @@ function draw(gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix
     drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
     // arm1
-    let arm1Length = 10.0;
+    let arm1Length = 12.0;
     modelMatrix = popMatrix()
     modelMatrix.translate(0.0, baseHeight, 0.0);
     modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
@@ -222,12 +222,12 @@ function draw(gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix
     normalMatrix.transpose();
     drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
-    //
-    modelMatrix = popMatrix();
-    modelMatrix.translate(0.0, palmLength, 0.0);
+    // //
+    // modelMatrix = popMatrix();
+    // modelMatrix.translate(0.0, palmLength, 0.0);
 
     // finger1
-    
+
 }
 
 function drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix) {
@@ -250,12 +250,12 @@ function initVertexBuffers (gl) {
     //  |/      |/
     //  v2------v3
     let vertices = new Float32Array([
-        1.5, 10.0, 1.5, -1.5, 10.0, 1.5, -1.5,  0.0, 1.5,  1.5,  0.0, 1.5, // v0-v1-v2-v3 front
-        1.5, 10.0, 1.5,  1.5,  0.0, 1.5,  1.5,  0.0,-1.5,  1.5, 10.0,-1.5, // v0-v3-v4-v5 right
-        1.5, 10.0, 1.5,  1.5, 10.0,-1.5, -1.5, 10.0,-1.5, -1.5, 10.0, 1.5, // v0-v5-v6-v1 up
-       -1.5, 10.0, 1.5, -1.5, 10.0,-1.5, -1.5,  0.0,-1.5, -1.5,  0.0, 1.5, // v1-v6-v7-v2 left
-       -1.5,  0.0,-1.5,  1.5,  0.0,-1.5,  1.5,  0.0, 1.5, -1.5,  0.0, 1.5, // v7-v4-v3-v2 down
-        1.5,  0.0,-1.5, -1.5,  0.0,-1.5, -1.5, 10.0,-1.5,  1.5, 10.0,-1.5  // v4-v7-v6-v5 back
+        0.5, 1.0, 0.5, -0.5, 1.0, 0.5, -0.5, 0.0, 0.5,  0.5, 0.0, 0.5, // v0-v1-v2-v3 front
+        0.5, 1.0, 0.5,  0.5, 0.0, 0.5,  0.5, 0.0,-0.5,  0.5, 1.0,-0.5, // v0-v3-v4-v5 right
+        0.5, 1.0, 0.5,  0.5, 1.0,-0.5, -0.5, 1.0,-0.5, -0.5, 1.0, 0.5, // v0-v5-v6-v1 up
+        -0.5, 1.0, 0.5, -0.5, 1.0,-0.5, -0.5, 0.0,-0.5, -0.5, 0.0, 0.5, // v1-v6-v7-v2 left
+        -0.5, 0.0,-0.5,  0.5, 0.0,-0.5,  0.5, 0.0, 0.5, -0.5, 0.0, 0.5, // v7-v4-v3-v2 down
+        0.5, 0.0,-0.5, -0.5, 0.0,-0.5, -0.5, 1.0,-0.5,  0.5, 1.0,-0.5  // v4-v7-v6-v5 back
       ]);
    
     let colors = new Float32Array([     // Colors
