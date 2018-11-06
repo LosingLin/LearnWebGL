@@ -138,6 +138,7 @@ function main() {
 let ANGLE_STEP = 3.0;
 let g_arm1Angle = -90.0;
 let g_joint1Angle = 0.0;
+let g_joint2Angle = 0.0;
 
 function keydown(ev) {
     switch (ev.keyCode) {
@@ -171,29 +172,62 @@ function draw(gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix
 
     console.log('------    g_arm1Angle :', g_arm1Angle);
     
-
-    let arm1Length = 10.0;
+    // base
+    let baseHeight = 2.0;
     modelMatrix.setTranslate(0.0, -12.0, 0.0);
-    modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
-    // console.log('------    draw : ', modelMatrix);
+    pushMatrix(modelMatrix);
+    modelMatrix.scale(10.0, baseHeight, 10.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
-
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-
     drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
+    // arm1
+    let arm1Length = 10.0;
+    modelMatrix = popMatrix()
+    modelMatrix.translate(0.0, baseHeight, 0.0);
+    modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
+    pushMatrix(modelMatrix);
+    modelMatrix.scale(3.0, arm1Length, 3.0);
+    mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
+    // 计算模型矩阵的逆转置矩阵
+    normalMatrix.setInverseOf(modelMatrix);
+    normalMatrix.transpose();
+    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+
+    // arm2
+    let arm2Length = 10.0;
+    modelMatrix = popMatrix();
     modelMatrix.translate(0.0, arm1Length, 0.0);
     modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0);
-    modelMatrix.scale(1.3, 1.0, 1.3);
+    pushMatrix(modelMatrix);
+    modelMatrix.scale(2.0, arm2Length, 6.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
-
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-
     drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+
+    // a palm
+    let palmLength = 2.0;
+    modelMatrix = popMatrix();
+    modelMatrix.translate(0.0, arm2Length, 0.0);
+    modelMatrix.rotate(g_joint2Angle, 0.0, 0.0, 1.0);
+    pushMatrix(modelMatrix);
+    modelMatrix.scale(2.0, palmLength, 6.0);
+    mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
+    // 计算模型矩阵的逆转置矩阵
+    normalMatrix.setInverseOf(modelMatrix);
+    normalMatrix.transpose();
+    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+
+    //
+    modelMatrix = popMatrix();
+    modelMatrix.translate(0.0, palmLength, 0.0);
+
+    // finger1
+    
 }
 
 function drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix) {
@@ -296,3 +330,12 @@ function initArrayBuffer(gl, data, num, type, attribute) {
     return true;
 }
 
+
+let g_matrixStack = [];
+function pushMatrix(m) {
+    let m2 = new Matrix4(m);
+    g_matrixStack.push(m2);
+}
+function popMatrix() {
+    return g_matrixStack.pop();
+}
