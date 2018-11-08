@@ -192,52 +192,52 @@ function draw(gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix
     // base
     let baseHeight = 2.0;
     modelMatrix.setTranslate(0.0, -12.0, 0.0);
-    pushMatrix(modelMatrix);
-    modelMatrix.scale(10.0, baseHeight, 10.0);
+    // pushMatrix(modelMatrix);
+    // modelMatrix.scale(10.0, baseHeight, 10.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+    drawSegment(gl, n, g_baseBuffer, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
     // arm1
     let arm1Length = 12.0;
-    modelMatrix = popMatrix()
+    // modelMatrix = popMatrix()
     modelMatrix.translate(0.0, baseHeight, 0.0);
     modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
-    pushMatrix(modelMatrix);
-    modelMatrix.scale(3.0, arm1Length, 3.0);
+    // pushMatrix(modelMatrix);
+    // modelMatrix.scale(3.0, arm1Length, 3.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+    drawSegment(gl, n, g_arm1Buffer, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
     // arm2
     let arm2Length = 10.0;
-    modelMatrix = popMatrix();
+    // modelMatrix = popMatrix();
     modelMatrix.translate(0.0, arm1Length, 0.0);
     modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0);
-    pushMatrix(modelMatrix);
-    modelMatrix.scale(2.0, arm2Length, 6.0);
+    // pushMatrix(modelMatrix);
+    // modelMatrix.scale(2.0, arm2Length, 6.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+    drawSegment(gl, n, g_arm2Buffer, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
     // a palm
     let palmLength = 2.0;
-    modelMatrix = popMatrix();
+    // modelMatrix = popMatrix();
     modelMatrix.translate(0.0, arm2Length, 0.0);
     modelMatrix.rotate(g_joint2Angle, 0.0, 0.0, 1.0);
     pushMatrix(modelMatrix);
-    modelMatrix.scale(2.0, palmLength, 6.0);
+    // modelMatrix.scale(2.0, palmLength, 6.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+    drawSegment(gl, n, g_palmBuffer, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
     //
     modelMatrix = popMatrix();
@@ -247,23 +247,23 @@ function draw(gl, n, modelMatrix, viewMatrix, projMatrix, u_MvpMatrix, mvpMatrix
     // finger1
     modelMatrix.translate(0.0, 0.0, 2.0);
     modelMatrix.rotate(g_joint3Angle, 1.0, 0.0, 0.0);
-    modelMatrix.scale(1.0, 2.0, 1.0);
+    // modelMatrix.scale(1.0, 2.0, 1.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+    drawSegment(gl, n, g_fingerBuffer, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
     // finger2
     modelMatrix = popMatrix();
     modelMatrix.translate(0.0, 0.0, -2.0);
     modelMatrix.rotate(g_joint3Angle, 1.0, 0.0, 0.0);
-    modelMatrix.scale(1.0, 2.0, 1.0);
+    // modelMatrix.scale(1.0, 2.0, 1.0);
     mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
     // 计算模型矩阵的逆转置矩阵
     normalMatrix.setInverseOf(modelMatrix);
     normalMatrix.transpose();
-    drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
+    drawSegment(gl, n, g_fingerBuffer, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix);
 
 }
 
@@ -277,6 +277,46 @@ function drawBox(gl, n, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_No
 
 }
 
+function drawSegment(gl, n, buffer, u_MvpMatrix, mvpMatrix, u_ModelMatrix, modelMatrix, u_NormalMatrix, normalMatrix) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+    let a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    if (a_Position < 0) {
+        console.log('Failed get the storage location of ' + attribute);
+        return false;
+    }
+    gl.vertexAttribPointer(a_Position, buffer.num, buffer.type, false, 0, 0);
+    gl.enableVertexAttribArray(a_Position);
+    
+    gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+    gl.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
+    gl.uniformMatrix4fv(u_NormalMatrix, false, normalMatrix.elements);
+
+    gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+}
+
+let g_baseBuffer = null;
+let g_arm1Buffer = null;
+let g_arm2Buffer = null;
+let g_palmBuffer = null;
+let g_fingerBuffer = null;
+
+function initArrayBufferForLastUse(gl, data, num, type) {
+    let buffer = gl.createBuffer();
+    if (!buffer) {
+        console.log('Failed to create the buffer object');
+        return null;
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+
+    buffer.num = num;
+    buffer.type = type;
+
+    return buffer;
+}
+
 function initVertexBuffers (gl) {
     // Create a cube
     //    v6----- v5
@@ -286,14 +326,50 @@ function initVertexBuffers (gl) {
     //  | |v7---|-|v4
     //  |/      |/
     //  v2------v3
-    let vertices = new Float32Array([
-        0.5, 1.0, 0.5, -0.5, 1.0, 0.5, -0.5, 0.0, 0.5,  0.5, 0.0, 0.5, // v0-v1-v2-v3 front
-        0.5, 1.0, 0.5,  0.5, 0.0, 0.5,  0.5, 0.0,-0.5,  0.5, 1.0,-0.5, // v0-v3-v4-v5 right
-        0.5, 1.0, 0.5,  0.5, 1.0,-0.5, -0.5, 1.0,-0.5, -0.5, 1.0, 0.5, // v0-v5-v6-v1 up
-        -0.5, 1.0, 0.5, -0.5, 1.0,-0.5, -0.5, 0.0,-0.5, -0.5, 0.0, 0.5, // v1-v6-v7-v2 left
-        -0.5, 0.0,-0.5,  0.5, 0.0,-0.5,  0.5, 0.0, 0.5, -0.5, 0.0, 0.5, // v7-v4-v3-v2 down
-        0.5, 0.0,-0.5, -0.5, 0.0,-0.5, -0.5, 1.0,-0.5,  0.5, 1.0,-0.5  // v4-v7-v6-v5 back
-      ]);
+    let vertices_base = new Float32Array([ // Base(10x2x10)
+        5.0, 2.0, 5.0, -5.0, 2.0, 5.0, -5.0, 0.0, 5.0,  5.0, 0.0, 5.0, // v0-v1-v2-v3 front
+        5.0, 2.0, 5.0,  5.0, 0.0, 5.0,  5.0, 0.0,-5.0,  5.0, 2.0,-5.0, // v0-v3-v4-v5 right
+        5.0, 2.0, 5.0,  5.0, 2.0,-5.0, -5.0, 2.0,-5.0, -5.0, 2.0, 5.0, // v0-v5-v6-v1 up
+       -5.0, 2.0, 5.0, -5.0, 2.0,-5.0, -5.0, 0.0,-5.0, -5.0, 0.0, 5.0, // v1-v6-v7-v2 left
+       -5.0, 0.0,-5.0,  5.0, 0.0,-5.0,  5.0, 0.0, 5.0, -5.0, 0.0, 5.0, // v7-v4-v3-v2 down
+        5.0, 0.0,-5.0, -5.0, 0.0,-5.0, -5.0, 2.0,-5.0,  5.0, 2.0,-5.0  // v4-v7-v6-v5 back
+     ]);
+   
+     let vertices_arm1 = new Float32Array([  // Arm1(3x10x3)
+        1.5, 10.0, 1.5, -1.5, 10.0, 1.5, -1.5,  0.0, 1.5,  1.5,  0.0, 1.5, // v0-v1-v2-v3 front
+        1.5, 10.0, 1.5,  1.5,  0.0, 1.5,  1.5,  0.0,-1.5,  1.5, 10.0,-1.5, // v0-v3-v4-v5 right
+        1.5, 10.0, 1.5,  1.5, 10.0,-1.5, -1.5, 10.0,-1.5, -1.5, 10.0, 1.5, // v0-v5-v6-v1 up
+       -1.5, 10.0, 1.5, -1.5, 10.0,-1.5, -1.5,  0.0,-1.5, -1.5,  0.0, 1.5, // v1-v6-v7-v2 left
+       -1.5,  0.0,-1.5,  1.5,  0.0,-1.5,  1.5,  0.0, 1.5, -1.5,  0.0, 1.5, // v7-v4-v3-v2 down
+        1.5,  0.0,-1.5, -1.5,  0.0,-1.5, -1.5, 10.0,-1.5,  1.5, 10.0,-1.5  // v4-v7-v6-v5 back
+     ]);
+   
+     let vertices_arm2 = new Float32Array([  // Arm2(4x10x4)
+        2.0, 10.0, 2.0, -2.0, 10.0, 2.0, -2.0,  0.0, 2.0,  2.0,  0.0, 2.0, // v0-v1-v2-v3 front
+        2.0, 10.0, 2.0,  2.0,  0.0, 2.0,  2.0,  0.0,-2.0,  2.0, 10.0,-2.0, // v0-v3-v4-v5 right
+        2.0, 10.0, 2.0,  2.0, 10.0,-2.0, -2.0, 10.0,-2.0, -2.0, 10.0, 2.0, // v0-v5-v6-v1 up
+       -2.0, 10.0, 2.0, -2.0, 10.0,-2.0, -2.0,  0.0,-2.0, -2.0,  0.0, 2.0, // v1-v6-v7-v2 left
+       -2.0,  0.0,-2.0,  2.0,  0.0,-2.0,  2.0,  0.0, 2.0, -2.0,  0.0, 2.0, // v7-v4-v3-v2 down
+        2.0,  0.0,-2.0, -2.0,  0.0,-2.0, -2.0, 10.0,-2.0,  2.0, 10.0,-2.0  // v4-v7-v6-v5 back
+     ]);
+   
+     let vertices_palm = new Float32Array([  // Palm(2x2x6)
+        1.0, 2.0, 3.0, -1.0, 2.0, 3.0, -1.0, 0.0, 3.0,  1.0, 0.0, 3.0, // v0-v1-v2-v3 front
+        1.0, 2.0, 3.0,  1.0, 0.0, 3.0,  1.0, 0.0,-3.0,  1.0, 2.0,-3.0, // v0-v3-v4-v5 right
+        1.0, 2.0, 3.0,  1.0, 2.0,-3.0, -1.0, 2.0,-3.0, -1.0, 2.0, 3.0, // v0-v5-v6-v1 up
+       -1.0, 2.0, 3.0, -1.0, 2.0,-3.0, -1.0, 0.0,-3.0, -1.0, 0.0, 3.0, // v1-v6-v7-v2 left
+       -1.0, 0.0,-3.0,  1.0, 0.0,-3.0,  1.0, 0.0, 3.0, -1.0, 0.0, 3.0, // v7-v4-v3-v2 down
+        1.0, 0.0,-3.0, -1.0, 0.0,-3.0, -1.0, 2.0,-3.0,  1.0, 2.0,-3.0  // v4-v7-v6-v5 back
+     ]);
+   
+     let vertices_finger = new Float32Array([  // Fingers(1x2x1)
+        0.5, 2.0, 0.5, -0.5, 2.0, 0.5, -0.5, 0.0, 0.5,  0.5, 0.0, 0.5, // v0-v1-v2-v3 front
+        0.5, 2.0, 0.5,  0.5, 0.0, 0.5,  0.5, 0.0,-0.5,  0.5, 2.0,-0.5, // v0-v3-v4-v5 right
+        0.5, 2.0, 0.5,  0.5, 2.0,-0.5, -0.5, 2.0,-0.5, -0.5, 2.0, 0.5, // v0-v5-v6-v1 up
+       -0.5, 2.0, 0.5, -0.5, 2.0,-0.5, -0.5, 0.0,-0.5, -0.5, 0.0, 0.5, // v1-v6-v7-v2 left
+       -0.5, 0.0,-0.5,  0.5, 0.0,-0.5,  0.5, 0.0, 0.5, -0.5, 0.0, 0.5, // v7-v4-v3-v2 down
+        0.5, 0.0,-0.5, -0.5, 0.0,-0.5, -0.5, 2.0,-0.5,  0.5, 2.0,-0.5  // v4-v7-v6-v5 back
+     ]);
    
     let colors = new Float32Array([     // Colors
         1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  1.0, 1.0, 1.0,  // v0-v1-v2-v3 front(white)
@@ -322,13 +398,12 @@ function initVertexBuffers (gl) {
        20,21,22,  20,22,23     // back
     ]);
 
-    let indexBuffer = gl.createBuffer();
-    if (!indexBuffer) {
-        console.log('Failed to create the buffer object');
-        return -1;
-    }
-
-    if (!initArrayBuffer(gl, vertices, 3, gl.FLOAT, 'a_Position')) {
+    g_baseBuffer = initArrayBufferForLastUse(gl, vertices_base, 3, gl.FLOAT);
+    g_arm1Buffer = initArrayBufferForLastUse(gl, vertices_arm1, 3, gl.FLOAT);
+    g_arm2Buffer = initArrayBufferForLastUse(gl, vertices_arm2, 3, gl.FLOAT);
+    g_palmBuffer = initArrayBufferForLastUse(gl, vertices_palm, 3, gl.FLOAT);
+    g_fingerBuffer = initArrayBufferForLastUse(gl, vertices_finger, 3, gl.FLOAT);
+    if (!g_baseBuffer || !g_arm1Buffer || !g_arm2Buffer || !g_palmBuffer || !g_fingerBuffer) {
         return -1;
     }
     if (!initArrayBuffer(gl, colors, 3, gl.FLOAT, 'a_Color')) {
@@ -338,6 +413,11 @@ function initVertexBuffers (gl) {
         return -1;
     }
 
+    let indexBuffer = gl.createBuffer();
+    if (!indexBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);

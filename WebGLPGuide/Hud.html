@@ -7,7 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body onload="main()">
-    <canvas id="webgl" width="800" height="800" style="position:absolute; z-index: 1;">
+    <canvas id="webgl" width="800" height="800" style="position:absolute; z-index: 0;">
+        Please use a browser that supports "canvas"
+    </canvas>
+    <canvas id="hud" width="800" height="800" style="position:absolute; z-index: 1;">
         Please use a browser that supports "canvas"
     </canvas>
     <p id="htmlLog">html log displayed here.</p>
@@ -41,8 +44,6 @@
     <!-- <script src="MultiJointModel_segment.js"></script> -->
     <!-- <script src="RotateObject.js"></script> -->
     <!-- <script src="PickObject.js"></script> -->
-    <!-- <script src="3DoverWeb.js"></script> -->
-    <!-- <script src="Fog.js"></script> -->
-    <script src="Fog_w.js"></script>
+    <script src="Hud.js"></script>
 </body>
 </html>
