@@ -252,7 +252,7 @@ function draw(gl, n, viewProjMatrix, u_MvpMatrix, modelMatrix, u_ModelMatrix, cu
     modelMatrix.rotate(currentAngle[1], 1.0, 0.0, 0.0); 
     g_MvpMatrix.multiply(modelMatrix);
 
-    console.log('------- MvpMatrix : ', g_MvpMatrix.multiplyVector4(new Vector4([1.0, 1.0, 1.0, 1.0])));
+    // console.log('------- MvpMatrix : ', g_MvpMatrix.multiplyVector4(new Vector4([1.0, 1.0, 1.0, 1.0])));
 
     // g_MvpMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis
     // g_MvpMatrix.rotate(currentAngle[1], 0.0, 1.0, 0.0); // Rotation around y-axis
