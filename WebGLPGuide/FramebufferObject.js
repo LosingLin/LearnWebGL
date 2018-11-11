@@ -70,14 +70,50 @@ let TEXTURE_FSHADER_SOURCE = `
     }
 `;
 
+let VSHADER_SOURCE = `
+    attribute vec4 a_Position;
+    attribute vec2 a_TexCoord;
+
+    uniform mat4 u_MvpMatrix;
+
+    varying vec2 v_TexCoord;
+
+    void main() {
+        gl_Position = u_MvpMatrix * a_Position;
+        v_TexCoord = a_TexCoord;
+    }
+`;
+
+let FSHADER_SOURCE = `
+    #ifdef GL_ES
+    precision mediump float;
+    #endif
+
+    uniform sampler2D u_Sampler;
+    
+    varying vec2 v_TexCoord;
+
+    void main() {
+        gl_FragColor = texture2D(u_Sampler, v_TexCoord);
+    }
+`;
+
+let OFFSCREEN_WIDTH = 256;
+let OFFSCREEN_HEIGHT = 256;
 
 function main() {
     let canvas = document.getElementById('webgl');
 
     let gl = getWebGLContext(canvas);
+    if (!gl) {
+        console.log('Failed to get the rendering context of canvas');
+        return;
+    }
 
     let solidProgram = createProgram(gl, SOLID_VSHADER_SOURCE, SOLID_FSHADER_SOURCE);
     let texProgram = createProgram(gl, TEXTURE_VSHADER_SOURCE, TEXTURE_FSHADER_SOURCE);
+    let frameProgram = createProgram(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+
 
     // Get storage locations of attribute and uniform variables in program object for single color drawing
     solidProgram.a_Position = gl.getAttribLocation(solidProgram, 'a_Position');
@@ -93,31 +129,142 @@ function main() {
     texProgram.u_NormalMatrix = gl.getUniformLocation(texProgram, 'u_NormalMatrix');
     texProgram.u_Sampler = gl.getUniformLocation(texProgram, 'u_Sampler');
 
+    // Get storage location of attribute and uniform variables
+    frameProgram.a_Position = gl.getAttribLocation(frameProgram, 'a_Position');
+    frameProgram.a_TexCoord = gl.getAttribLocation(frameProgram, 'a_TexCoord');
+    frameProgram.u_MvpMatrix = gl.getUniformLocation(frameProgram, 'u_MvpMatrix');
+    frameProgram.u_Sampler = gl.getUniformLocation(frameProgram, 'u_Sampler');
+
+    let plane = initVertexBuffersForPlane(gl);
     let cube = initVertexBuffers(gl);
 
     let texture = initTextures(gl, texProgram);
 
+    // initialize framebuffer object (FBO)
+    let fbo = initFrameBufferObject(gl);
+
+
     gl.enable(gl.DEPTH_TEST);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
+    let viewProjMatrixPlane = new Matrix4();
+    viewProjMatrixPlane.setPerspective(30.0, canvas.width / canvas.height, 1.0, 100.0);
+    viewProjMatrixPlane.lookAt(0.0, 0.0, 7.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
     let viewProjMatrix = new Matrix4();
-    viewProjMatrix.setPerspective(30.0, canvas.width / canvas.height, 1.0, 100.0);
+    viewProjMatrix.setPerspective(30.0, OFFSCREEN_WIDTH / OFFSCREEN_HEIGHT, 1.0, 100.0);
     viewProjMatrix.lookAt(0.0, 0.0, 15.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
     let currentAngle = 0.0;
     let render = function() {
-        currentAngle = animate(currentAngle);
 
+        // draw to framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.viewport(0, 0, OFFSCREEN_WIDTH, OFFSCREEN_HEIGHT);
+
+        gl.clearColor(0.2, 0.2, 0.4, 1.0);
+        currentAngle = animate(currentAngle);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         drawSolidCube(gl, solidProgram, cube, -2.0, currentAngle, viewProjMatrix);
-
         drawTexCube(gl, texProgram, cube, texture, 2.0, currentAngle, viewProjMatrix);
+
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+        // draw to texture
+        gl.clearColor(0,0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        gl.useProgram(frameProgram);
+        gl.uniform1i(frameProgram.u_Sampler, 0);
+
+        g_modelMatrix.setTranslate(0.0, 0.0, 1.0);
+        g_modelMatrix.rotate(20.0, 1.0, 0.0, 0.0);
+        g_modelMatrix.rotate(currentAngle, 0.0, 1.0, 0.0);
+
+        g_mvpMatrix.set(viewProjMatrixPlane);
+        g_mvpMatrix.multiply(g_modelMatrix);
+        gl.uniformMatrix4fv(frameProgram.u_MvpMatrix, false, g_mvpMatrix.elements);
+
+        initAttributeVariable(gl, frameProgram.a_Position, plane.vertexBuffer);
+        initAttributeVariable(gl, frameProgram.a_TexCoord, plane.texCoordBuffer);
+
+        gl.activeTexture(gl.TEXTURE0);
+        if (fbo.texture) {
+            gl.bindTexture(gl.TEXTURE_2D, fbo.texture);
+        }
+
+        // console.log('---- texture : ', texture);
+        // console.log('---- fbo.texture : ', fbo.texture);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane.indexBuffer);
+        gl.drawElements(gl.TRIANGLES, plane.numIndices, plane.indexBuffer.type, 0);
 
         requestAnimationFrame(render, canvas);
     }
 
     render();
+}
+
+function initFrameBufferObject(gl) {
+    let framebuffer;
+    let texture;
+    let depthBuffer;
+
+    let error = function() {
+        if (framebuffer) gl.deleteFramebuffer(framebuffer);
+        if (texture) gl.deleteTexture(texture);
+        if (depthBuffer) gl.deleteRenderbuffer(depthBuffer);
+        return null;
+    }
+
+    // create a frame buffer object
+    framebuffer = gl.createFramebuffer();
+    if (!framebuffer) {
+        console.log('Failed to create frame buffer object');
+        return error();
+    }
+
+    // create 
+    texture = gl.createTexture();
+    if (!texture) {
+        console.log('Failed to create texture object');
+        return error();
+    }
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, OFFSCREEN_WIDTH, OFFSCREEN_HEIGHT, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    
+    framebuffer.texture = texture;
+
+    // create a renderbuffer object and set its size
+    depthBuffer = gl.createRenderbuffer();
+    if (!depthBuffer) {
+        console.log('Faild to create renderbuffer object');
+        return error();
+    }
+    gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, OFFSCREEN_WIDTH, OFFSCREEN_HEIGHT);
+
+    // attach the texture and the renderbuffer object to the FBO
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
+    
+    let e = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (gl.FRAMEBUFFER_COMPLETE !== e) {
+        console.log('Frame buffer object is incomplete: ' + e.toString());
+        return error();
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+    return framebuffer;
 }
 
 
@@ -202,6 +349,39 @@ function initArrayBufferForLaterUse(gl, data, num, type) {
     return buffer;
 }
 
+function initVertexBuffersForPlane(gl) {
+    // Create face
+    //  v1------v0
+    //  |        | 
+    //  |        |
+    //  |        |
+    //  v2------v3
+
+    // Vertex coordinates
+    let vertices = new Float32Array([
+        1.0, 1.0, 0.0,  -1.0, 1.0, 0.0,  -1.0,-1.0, 0.0,   1.0,-1.0, 0.0    // v0-v1-v2-v3
+    ]);
+
+    // Texture coordinates
+    let texCoords = new Float32Array([1.0, 1.0,   0.0, 1.0,   0.0, 0.0,   1.0, 0.0]);
+
+    // Indices of the vertices
+    let indices = new Uint8Array([0, 1, 2,   0, 2, 3]);
+
+    let o = {};
+
+    o.vertexBuffer = initArrayBufferForLaterUse(gl, vertices, 3, gl.FLOAT);
+    o.texCoordBuffer = initArrayBufferForLaterUse(gl, texCoords, 2, gl.FLOAT);
+    o.indexBuffer = initElementArrayBufferForLaterUse(gl, indices, gl.UNSIGNED_BYTE);
+
+    o.numIndices = indices.length;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+    return o;
+}
+
 function initElementArrayBufferForLaterUse(gl, data, type) {
   let buffer = gl.createBuffer();　  // Create a buffer object
   if (!buffer) {
@@ -230,9 +410,6 @@ function initTextures(gl, program) {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
-        gl.useProgram(program);
-        gl.uniform1i(program.u_Sampler, 0);
-
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
@@ -244,6 +421,8 @@ function initTextures(gl, program) {
 function drawSolidCube(gl, program, o, x, angle, viewProjMatrix) {
     gl.useProgram(program);
 
+    // gl.uniform1i(program.u_Sampler, 0);
+
     initAttributeVariable(gl, program.a_Position, o.vertexBuffer);
     initAttributeVariable(gl, program.a_Normal, o.normalBuffer);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, o.indexBuffer);
@@ -253,6 +432,8 @@ function drawSolidCube(gl, program, o, x, angle, viewProjMatrix) {
 
 function drawTexCube(gl, program, o, texture, x, angle, viewProjMatrix) {
     gl.useProgram(program);   // Tell that this program object is used
+
+    gl.uniform1i(program.u_Sampler, 0);
 
     // Assign the buffer objects and enable the assignment
     initAttributeVariable(gl, program.a_Position, o.vertexBuffer);  // Vertex coordinates
