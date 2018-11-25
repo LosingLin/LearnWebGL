@@ -22,8 +22,17 @@ let SHADOW_FSHADER_SOURCE = `
     varying vec4 v_Color;
 
     void main () {
-        gl_FragColor = vec4(gl_FragCoord.z, 0.0, 0.0, 1.0);
+        // gl_FragColor = vec4(gl_FragCoord.z, 0.0, 0.0, 1.0);
         // gl_FragColor = v_Color;
+
+        const vec4 bitShift = vec4(1.0, 256.0, 256.0 * 256.0, 256.0*256.0*256.0);
+        const vec4 bitMask = vec4(1.0/256.0, 1.0/256.0, 1.0/256.0, 0.0);
+
+        vec4 rgbaDepth = fract(gl_FragCoord.z * bitShift);
+        rgbaDepth -= rgbaDepth.gbaa * bitMask;
+
+        gl_FragColor = rgbaDepth;
+        // gl_FragColor = vec4(rgbaDepth.rgb, 1.0);
     }
 `;
 
@@ -54,11 +63,17 @@ let FSHADER_SOURCE = `
     varying vec4 v_PositionFromLight;
     varying vec4 v_Color;
 
+    float unpackDepth (const in vec4 rgbaDepth) {
+        const vec4 bitShift = vec4(1.0, 1.0/256.0, 1.0/(256.0 * 256.0), 1.0/(256.0*256.0*256.0));
+        float depth = dot(rgbaDepth, bitShift);
+        return depth;
+    }
+
     void main () {
         vec3 shadowCoord = (v_PositionFromLight.xyz/v_PositionFromLight.w) / 2.0 + 0.5;
         vec4 rgbaDepth = texture2D(u_ShadowMap, shadowCoord.xy);
-        float depth = rgbaDepth.r;
-        float visibility = (shadowCoord.z > depth + 0.005) ? 0.7 : 1.0;
+        float depth = unpackDepth(rgbaDepth);
+        float visibility = (shadowCoord.z > depth + 0.0015) ? 0.7 : 1.0;
 
         gl_FragColor = vec4(v_Color.rgb * visibility, v_Color.a);
     }
@@ -68,7 +83,7 @@ let OFFSCREEN_WIDTH = 2048;
 let OFFSCREEN_HEIGHT = 2048;
 
 let LIGHT_X = 0;
-let LIGHT_Y = 7;
+let LIGHT_Y = 40;
 let LIGHT_Z = 2;
 
 function main () {
