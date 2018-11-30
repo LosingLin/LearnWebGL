@@ -38,11 +38,11 @@ function initLight() {
     scene.add(light);
 }
 
-let cube;
+let mesh;
 function initObject() {
     let geometry = new THREE.CylinderGeometry(100, 150, 400);
     let material = new THREE.MeshLambertMaterial({color: 0xFFFF00});
-    let mesh = new THREE.Mesh(geometry, material);
+    mesh = new THREE.Mesh(geometry, material);
 
     mesh.position = new THREE.Vector3(0, 0, 0);
     scene.add(mesh);
@@ -50,6 +50,8 @@ function initObject() {
 
 function animate() {
     renderer.clear();
+    // camera.position.x = camera.position.x + 1;
+    mesh.position.x -= 1;
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
 }
@@ -61,5 +63,5 @@ function threeStart() {
     initLight();
     initObject();
 
-    render();
+    animate();
 }
