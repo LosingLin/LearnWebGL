@@ -36,25 +36,60 @@ Object.assign( Vector2.prototype, {
 		return this;
 	},
 	
-	add: function(v) {
+	add: function( v ) {
 		this.x += v.x;
 		this.y += v.y;
 		return this;
 	},
-	sub: function(v) {
+	addScalar: function( s ) {
+		this.x += s;
+		this.y += s;
+		return this;
+	},
+	sub: function( v ) {
 		this.x -= v.x;
 		this.y -= v.y;
 		return this;
 	},
-	multiply: function(v) {
+	subScalar: function( s ) {
+		this.x -= s;
+		this.y -= s;
+		return this;
+	},
+	multiply: function( v ) {
 		this.x *= v.x;
 		this.y *= v.y;
 		return this;
 	},
-	divide: function(v) {
+	multiplyScalar: function( s ) {
+		this.x *= s;
+		this.y *= s;
+		return this;
+	},
+	divide: function( v ) {
 		this.x /= v.x;
 		this.y /= v.y;
+		return this;
 	},
+	divideScalar: function( s ) {
+		this.x /= s;
+		this.y /= s;
+		return this;
+	},
+	dot: function( v ) {
+		return this.x * v.x + this.y * v.y;
+	},
+	cross: function( v ) {
+		return this.x * v.y - this.y * v.x;
+	},
+
+	length: function() {
+		return Math.sqrt(this.x * this.x + this.y * this.y);
+	},
+	normalize: function() {
+		return this.divideScalar(this.length() || 1);
+	}
+
 } );
 
 
