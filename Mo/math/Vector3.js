@@ -56,10 +56,7 @@ Object.assign( Vector3.prototype, {
         return this;
     },
     divideScalar: function( s ) {
-        this.x /= s;
-        this.y /= s;
-        this.z /= s;
-        return this;
+        return this.multiplyScalar( 1 / s );
     },
 
     dot: function ( v ) {
