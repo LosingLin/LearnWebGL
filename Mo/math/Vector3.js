@@ -1,68 +1,68 @@
 
-function Vector3( x, y, z) {
+function Vector3(x, y, z) {
     this.x = x || 0;
     this.y = y || 0;
     this.z = z || 0;
 }
 
-Object.assign( Vector3.prototype, {
+Object.assign(Vector3.prototype, {
     isVector3: true,
-    set: function( x, y, z) {
+    set: function(x, y, z) {
         this.x = x;
         this.y = y;
         this.z = z;
         return this;
     },
-    add: function( v ) {
+    add: function(v) {
         this.x += v.x;
         this.y += v.y;
         this.z += v.z;
         return this;
     },
-    addScalar: function( s ) {
+    addScalar: function(s) {
         this.x += s;
         this.y += s;
         this.z += s;
         return this;
     },
-    sub: function( v ) {
+    sub: function(v) {
         this.x -= v.x;
         this.y -= v.y;
         this.z -= v.z;
         return this;
     },
-    subScalar: function( s ) {
+    subScalar: function(s) {
         this.x -= s;
         this.y -= y;
         this.z -= z;
         return this;
     },
-    multiply: function( v ) {
+    multiply: function(v) {
         this.x *= v.x;
         this.y *= v.y;
         this.z *= v.z;
         return this;
     },
-    multiplyScalar: function( s ) {
+    multiplyScalar: function(s) {
         this.x *= s;
         this.y *= s;
         this.z *= s;
         return this;
     },
-    divide: function( v ) {
+    divide: function(v) {
         this.x /= v.x;
         this.y /= v.y;
         this.z /= v.z;
         return this;
     },
-    divideScalar: function( s ) {
+    divideScalar: function(s) {
         return this.multiplyScalar( 1 / s );
     },
 
-    dot: function ( v ) {
+    dot: function (v) {
         return this.x * v.x + this.y * v.y + this.z * v.z;
     },
-    cross: function ( v ) {
+    cross: function (v) {
         let x = this.y * v.z - this.z * v.y;
         let y = this.z * v.x - this.x * v.z;
         let z = this.x * v.y - this.y * v.x;
@@ -80,6 +80,6 @@ Object.assign( Vector3.prototype, {
     normalize: function () {
         return this.divideScalar(this.length() || 1);
     } 
-} );
+});
 
-export { Vector3 };
+export {Vector3};

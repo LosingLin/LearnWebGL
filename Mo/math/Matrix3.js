@@ -7,9 +7,9 @@ function Matrix3() {
     ];
 }
 
-Object.assign( Matrix3.prototype, {
+Object.assign(Matrix3.prototype, {
     isMatrix3: true,
-    set: function( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
+    set: function(n11, n12, n13, n21, n22, n23, n31, n32, n33) {
         let elt = this.elements;
         elt[0] = n11; elt[1] = n21; elt[2] = n31;
         elt[3] = n12; elt[4] = n22; elt[5] = n32;
@@ -25,17 +25,10 @@ Object.assign( Matrix3.prototype, {
         return this;
     },
     clone: function() {
-        let clone = new this.constructor();
-        let elt = this.elements;
-        clone.set( 
-            elt[0], elt[3], elt[6],
-            elt[1], elt[4], elt[7],
-            elt[2], elt[5], elt[8]
-        );
-        return clone;
+        return new this.constructor().fromArray(this.elements);
     },
 
-    mutilplyMatrices: function( am, bm ) {
+    mutilplyMatrices: function(am, bm) {
         let elt = this.elements;
         let aelt = am.elements;
         let belt = bm.elements;
@@ -63,18 +56,35 @@ Object.assign( Matrix3.prototype, {
         return this;
     },
 
-    mutiply: function( m ) {
+    mutiply: function(m) {
         return this.mutilplyMatrices( this, m );
     },
 
-    premutiply: function( m ) {
+    premutiply: function(m) {
         return this.mutilplyMatrices( m, this );
     },
 
-    mutiplyScalar: function( s ) {
+    mutiplyScalar: function(s) {
         let elt = this.elements;
 
-    }
-} );
+    },
 
-export { Matrix3 };
+    fromArray: function(array) {
+        for (let i = 0; i < 9; ++ i) {
+            this.elements[i] = array[i];
+        }
+        return this;
+    },
+    toArray: function(array) {
+        if (array === undefined) array = [];
+
+        let elt = this.elements;
+        for (let i = 0; i < 9; ++ i) {
+            array[i] = elt[i];
+        }
+
+        return array;
+    }
+});
+
+export {Matrix3};
