@@ -1,5 +1,6 @@
 import {Vector2} from '../math/Vector2.js';
 import {Vector3} from '../math/Vector3.js';
+import {Vector4} from '../math/Vector4.js';
 import {Matrix3} from '../math/Matrix3.js';
 import {Matrix4} from '../math/Matrix4.js';
 
@@ -8,6 +9,8 @@ import {Matrix4} from '../math/Matrix4.js';
 // import * from '../math/Vector2';
 
 import {GLHelper} from '../gl/GLHelper.js';
+
+import {VShader_Point, FShader_Point} from '../shaders/PointShader.js'
 
 window.gl = null;
 
@@ -47,7 +50,30 @@ function main () {
 
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    
+
+    const program = glHelper.initShaderProgram(VShader_Point, FShader_Point);
+    let a_Position = gl.getAttribLocation(program, 'a_Position');
+    let u_PointSize = gl.getUniformLocation(program, 'u_PointSize');
+    let u_Color = gl.getUniformLocation(program, 'u_Color');
+
+    console.log('---- a_Position : ', a_Position);
+    console.log('---- u_PointSize : ', u_PointSize);
+
+    gl.useProgram(program);
+
+    let point = new Vector3(0.0, 0.0, 0.0);
+    gl.vertexAttrib3f(a_Position, point.x, point.y, point.z);
+    gl.uniform1f(u_PointSize, 20.0);
+
+    let color = new Vector4(1.0, 1.0, 0.0, 0.6);
+    gl.uniform4f(u_Color, color.x, color.y, color.z, color.w);
+
+    gl.drawArrays(gl.POINTS, 0, 1);
+
+    point.set(0.2, 0.2, 0.0);
+    gl.vertexAttrib3f(a_Position, point.x, point.y, point.z);
+    gl.drawArrays(gl.POINTS, 0, 1);
+
 }
 
 window.main = main;
